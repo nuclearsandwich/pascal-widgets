@@ -1,0 +1,18 @@
+Pascal Widgets Program HW 1
+===========================
+
+First Homework Assignment for CS153
+
+Apparently in order to do compilers we need to lern2pascal.
+
+Fun times.
+
+
+Dependencies
+------------
+
+I use the Free Pascal Distribution and Compiler as well as the Make utility.
+
+$ git clone git://github.com/nuclearsandwich/pascal-widgets
+$ cd pascal-widgets
+$ make
