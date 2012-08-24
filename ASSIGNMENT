@@ -1,0 +1,76 @@
+Write a Pascal program
+
+The purpose of this assignment is to give you a crash course in Pascal
+programming. It is important for you to be familiar with Pascal because the
+source programs for our interpreter will be written in that language. (For your
+team compiler project, you can choose a different source language or invent a
+new language.)
+
+Pascal is a powerful procedure-oriented language with a relatively simple
+syntax. It was popular during the mid-1970s through the mid-1980s as a teaching
+language. If you had taken Introduction to Programming during that period, the
+language you learned most likely would have been Pascal. The original version
+of Pascal (″classic Pascal″) was not object-oriented, unlike later versions of
+the language and its descendants.
+
+For this assignment, write a well-structured Pascal program named Widgets that
+reads data from a text file and prints a sorted listing of the number of
+widgets produced by each employee of Conglomerated Widgets. The company has
+plants (factories) in several states. Each plant has several departments where
+the widget-making employees work.
+
+Your input text file widgets.in is given.
+
+Each input line contains six fields in this order, separated by blanks:
+
+- State code (two digits)
+- Plant code (two digits)
+- Department code (two digits)
+- Employee id (three digits)
+- Employee name (up to 32 characters up to but not including a colon)
+- Count of widgets made by the employee (1 or 2 digits)
+
+Sort the output records first by state code, then by plant code, then by
+department code, and then by employee ID. As shown above, print the number of
+widgets made by each department, plant, and state, and then the grand total
+number of widgets.
+
+Program Constraints
+-------------------
+
+Your Pascal program must meet the following constraints:
+- You must use a record data type to contain the information for each employee.
+- You must use procedures and/or functions.
+- You should not need a USES clause which did not exist in classic Pascal.
+- Do not use the built-in string type. Represent strings as arrays of characters, as in classic Pascal. For example:
+
+	TYPE
+		Field = PACKED ARRAY [1..12] OF char;
+
+(Ignore the PACKED reserved word.)
+
+A program that works correctly subject to the above constraints will receive a
+maximum of 50 points.
+
+To receive up to an additional 50 points, you must
+include the following classic Pascal features:
+
+- Pointer types and dynamically-allocated data. (Up to 20 points.)
+- Nested procedures and functions, e.g., a procedure nested inside a procedure. (Up to 20 points.)
+- At least one parameter passed by reference. (Up to 10 points.)
+
+You should be able to run your program from the command line and have it read via its standard input, similar to:
+
+$ Widgets < widgets.in
+
+Text input hints:
+
+- If ch is a character variable, then read(ch) will read the next character from the standard input.
+
+- A call to readln will skip the rest of the current input line, and the next call to read will read starting on the next input line.
+- Boolean functions `eoln` and `eof` without parameters test whether the standard input is at the end of the current line or at the end of file, respectively. (If you′re typing input data into a Windows command window, a line containing only control-Z is the end-of-file marker. On Linux, it′s control-D which may be the same as on the Mac.)
+
+Your program, including comments and blank lines, shouldn′t be over 300 lines.
+Even though Pascal is a simple language compared to Java, learning a new
+language can be tricky. Do not wait until the last minute to work on this
+assignment!
