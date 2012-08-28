@@ -1,6 +1,7 @@
 PROGRAM Widgets;
 CONST
 	nullb = #0;
+	LF    = #10;
 
 TYPE
 	textfield  = packed array [1..64] of char;
@@ -12,7 +13,6 @@ TYPE
 		name        : textfield;
 		plant       : integer;
 		state       : integer;
-		widgetcount : integer;
 	END;
 
 	department = array [1..12] of employee;
@@ -20,8 +20,11 @@ TYPE
 	state      = array [1..12] of plant;
 
 VAR
-	empl  : employee;
-	world : array [1..12] of state;
+	ch        : char;
+	empl      : employee;
+	employees : array [1..12] of employee;
+	world     : array [1..12] of state;
+	emplcount : integer;
 
 PROCEDURE readempl;
 	PROCEDURE readname;
@@ -76,5 +79,12 @@ BEGIN
 END;
 
 BEGIN
-	readempl;
+emplcount := 1;
+	REPEAT
+		readempl;
+		writeempl;
+		employees[emplcount] := empl;
+		inc(emplcount);
+		read(ch);
+	UNTIL eof;
 END.
