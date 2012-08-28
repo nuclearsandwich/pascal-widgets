@@ -1,7 +1,8 @@
 PROGRAM Widgets;
 CONST
-	nullb = #0;
+	NULLB = #0;
 	LF    = #10;
+	MAXLN = 12;
 
 TYPE
 	textfield  = packed array [1..64] of char;
@@ -15,15 +16,15 @@ TYPE
 		state       : integer;
 	END;
 
-	department = array [1..12] of employee;
-	plant      = array [1..12] of department;
-	state      = array [1..12] of plant;
+	department = array [1..MAXLN] of employee;
+	plant      = array [1..MAXLN] of department;
+	state      = array [1..MAXLN] of plant;
 
 VAR
 	ch        : char;
 	empl      : employee;
-	employees : array [1..12] of employee;
-	world     : array [1..12] of state;
+	employees : array [1..MAXLN] of employee;
+	world     : array [1..MAXLN] of state;
 	emplcount : integer;
 
 PROCEDURE readempl;
