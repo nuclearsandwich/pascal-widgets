@@ -1,8 +1,10 @@
 PROGRAM Widgets;
 CONST
-	NULLB = #0;
-	LF    = #10;
-	MAXLN = 12;
+	NULLP     = pointer(0);
+	NULLC     = #0;
+	LF        = #10;
+	MAXLN     = 12;
+	MAXSTATES = 50;
 
 TYPE
 	textfield  = packed array [1..64] of char;
@@ -18,14 +20,25 @@ TYPE
 
 	department = array [1..MAXLN] of employee;
 	plant      = array [1..MAXLN] of department;
-	state      = array [1..MAXLN] of plant;
+
+	state      = RECORD
+		id        : integer; 
+		count     : integer; 
+		employees : array[1..MAXLN] of employee;
+		plants : array [1..MAXLN] of plant;
+	END;
+
+	statep = ^state;
+	employeep = ^employee;
 
 VAR
 	ch        : char;
 	empl      : employee;
+	stt       : ^state;
 	employees : array [1..MAXLN] of employee;
-	world     : array [1..MAXLN] of state;
 	emplcount : integer;
+	i         : integer;
+	world     : packed array [1..MAXSTATES] of ^state;
 
 PROCEDURE readempl;
 	PROCEDURE readname;
@@ -43,7 +56,7 @@ PROCEDURE readempl;
 			i := i + 1;
 			read(ch);
 		END;
-		empl.name[i] := nullb;
+		empl.name[i] := NULLC;
 		read(ch);
 	END;
 
@@ -62,7 +75,7 @@ PROCEDURE writeempl;
 		i : integer;
 	BEGIN
 		i := 1;
-		WHILE empl.name[i] <> nullb DO
+		WHILE empl.name[i] <> NULLC DO
 		BEGIN
 		write(ErrOutput, empl.name[i]);
 			i := i + 1;
@@ -100,8 +113,62 @@ BEGIN
 	END;
 END;
 
+PROCEDURE writestate;
+BEGIN
+	IF stt^.count < 10 THEN
+		write('                           ')
+	ELSE
+		IF stt^.count < 100 THEN
+			write('                          ')
+		ELSE
+			write('                         ');
+	writeln(stt^.count, ' ***  total for state ', stt^.id)
+END;
+
+PROCEDURE writestates;
+BEGIN
+	FOR i := 1 TO MAXSTATES DO
+	BEGIN
+		stt := world[i];
+		IF NOT(stt = NULLP) THEN
+			writestate;
+	END;
+END;
+
+FUNCTION findstate(stateid : integer) : statep;
+BEGIN
+	IF world[stateid] = NULLP THEN
+		world[stateid] := new(statep);
+		world[stateid]^.count := 0;
+		world[stateid]^.id := stateid;
+		findstate := world[stateid];
+END;
+
+PROCEDURE initworld;
+BEGIN
+	FOR i := 1 TO MAXSTATES DO
+		world[i] := NULLP;
+END;
+
+PROCEDURE appendtostate(stt : statep; empl : employeep);
+BEGIN
+END;
+
+PROCEDURE sortworld;
+BEGIN
+	FOR i := 1 TO emplcount DO
+	BEGIN
+		empl := employees[i];
+		stt := findstate(empl.state);
+		stt^.count := stt^.count + empl.count;
+		appendtostate(@stt, @empl)
+	END;
+END;
 
 BEGIN
+	initworld;
 	reademployees;
 	writeemployees;
+	sortworld;
+	writestates;
 END.
