@@ -42,9 +42,6 @@ VAR
 
 PROCEDURE readempl;
 	PROCEDURE readname;
-	VAR
-		ch : char;
-		i  : integer;
 	BEGIN
 		i := 1;
 		read(ch);
@@ -82,7 +79,6 @@ PROCEDURE writeempl;
 		END;
 	END;
 BEGIN
-
 	WITH empl DO
 	BEGIN
 		write(ErrOutput, 'State: ', state, ' Plant: ', plant, ' Dept: ', dept, ' ID: ', id, ' Name: ');
@@ -94,14 +90,14 @@ END;
 
 PROCEDURE reademployees;
 BEGIN
-	emplcount := 1;
-
-	REPEAT
+	emplcount := 0;
+	WHILE Not(EOF) DO
+	BEGIN
+		inc(emplcount);
 		readempl;
 		employees[emplcount] := empl;
-		inc(emplcount);
 		read(ch); (* Eat the line feed *)
-	UNTIL eof;
+	END;
 END;
 
 PROCEDURE writeemployees;
@@ -125,12 +121,12 @@ BEGIN
 	writeln(stt^.count, ' ***  total for state ', stt^.id)
 END;
 
-PROCEDURE writestates;
+PROCEDURE writeworld;
 BEGIN
 	FOR i := 1 TO MAXSTATES DO
 	BEGIN
 		stt := world[i];
-		IF NOT(stt = NULLP) THEN
+		IF Not(stt = NULLP) THEN
 			writestate;
 	END;
 END;
@@ -138,10 +134,13 @@ END;
 FUNCTION findstate(stateid : integer) : statep;
 BEGIN
 	IF world[stateid] = NULLP THEN
+	BEGIN
 		world[stateid] := new(statep);
 		world[stateid]^.count := 0;
 		world[stateid]^.id := stateid;
-		findstate := world[stateid];
+	END;
+
+	findstate := world[stateid];
 END;
 
 PROCEDURE initworld;
@@ -159,8 +158,10 @@ BEGIN
 	FOR i := 1 TO emplcount DO
 	BEGIN
 		empl := employees[i];
+		writeempl;
 		stt := findstate(empl.state);
 		stt^.count := stt^.count + empl.count;
+		(* writeln('Adding ', empl.count, ' widgets from ', empl.name, ' to ', stt^.id, ' for a total of ', stt^.count); *)
 		appendtostate(@stt, @empl)
 	END;
 END;
@@ -168,7 +169,6 @@ END;
 BEGIN
 	initworld;
 	reademployees;
-	writeemployees;
 	sortworld;
-	writestates;
+	writeworld;
 END.
