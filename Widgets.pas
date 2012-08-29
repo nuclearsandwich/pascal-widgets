@@ -79,13 +79,29 @@ BEGIN
 	END
 END;
 
+PROCEDURE reademployees;
 BEGIN
-emplcount := 1;
+	emplcount := 1;
+
 	REPEAT
 		readempl;
-		writeempl;
 		employees[emplcount] := empl;
 		inc(emplcount);
-		read(ch);
+		read(ch); (* Eat the line feed *)
 	UNTIL eof;
+END;
+
+PROCEDURE writeemployees;
+BEGIN
+	FOR emplcount := 1 TO MAXLN DO
+	BEGIN
+		empl := employees[emplcount];
+		writeempl;
+	END;
+END;
+
+
+BEGIN
+	reademployees;
+	writeemployees;
 END.
