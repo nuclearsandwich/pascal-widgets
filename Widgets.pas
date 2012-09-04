@@ -49,6 +49,9 @@ VAR
 	empl      : employee;
 	employees : array [1..MAXLN] of employee;
 	emplcount : integer;
+	stcount   : integer;
+	plntcount : integer;
+	deptcount : integer;
 	i         : integer;
 	world     : packed array [1..MAXSTATES] of ^state;
 
@@ -107,7 +110,6 @@ END;
 
 PROCEDURE reademployees;
 BEGIN
-	emplcount := 0;
 	WHILE Not(EOF) DO
 	BEGIN
 		inc(emplcount);
@@ -175,6 +177,7 @@ FUNCTION findstate(stateid : integer) : statep;
 	VAR
 		index : integer;
 	BEGIN
+		inc(stcount);
 		initstate := new(statep);
 		initstate^.count := 0;
 		initstate^.id := stateid;
@@ -203,6 +206,7 @@ PROCEDURE appendtoplant(p : plantp; e : employeep);
 	FUNCTION finddept(deptid : integer) : deptp;
 		FUNCTION initdept : deptp;
 		BEGIN
+			inc(deptcount);
 			initdept := new(deptp);
 			initdept^.count := 0;
 			initdept^.id := deptid;
@@ -223,6 +227,7 @@ PROCEDURE appendtostate(s : statep; e : employeep);
 		VAR
 			i : integer;
 		BEGIN
+			inc(plntcount);
 			initplant := new(plantp);
 			initplant^.count := 0;
 			initplant^.id := plantid;
@@ -251,8 +256,16 @@ BEGIN
 END;
 
 BEGIN
+	emplcount := 0;
+	stcount   := 0;
+	plntcount := 0;
+	deptcount := 0;
 	initworld;
 	reademployees;
 	fillworld;
-	writeworld;
+
+	writeln('Employees: ', emplcount);
+	writeln('States: ', stcount);
+	writeln('Plants ', plntcount);
+	writeln('Depts ', deptcount);
 END.
