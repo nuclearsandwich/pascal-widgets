@@ -1,10 +1,13 @@
 PROGRAM Widgets;
 CONST
-	NULLP     = pointer(0);
-	NULLC     = #0;
-	LF        = #10;
-	MAXLN     = 12;
-	MAXSTATES = 50;
+	NULLP         = pointer(0);
+	NULLC         = #0;
+	LF            = #10;
+	MAXLN         = 12;
+	MAXSTATES     = 50;
+	MAXPLANTS     = 50;
+	MAXDEPTS      = 100;
+	MAXEMPLOYEES  = 100;
 
 TYPE
 	textfield  = packed array [1..64] of char;
@@ -18,23 +21,32 @@ TYPE
 		state       : integer;
 	END;
 
-	department = array [1..MAXLN] of employee;
-	plant      = array [1..MAXLN] of department;
-
-	state      = RECORD
-		id        : integer; 
-		count     : integer; 
-		employees : array[1..MAXLN] of employee;
-		plants : array [1..MAXLN] of plant;
+	department = RECORD
+		count     : integer;
+		employees : packed array [1..MAXEMPLOYEES] of ^employee;
+		id        : integer;
 	END;
 
-	statep = ^state;
+	plant = RECORD
+		count       : integer;
+		departments : packed array [1..MAXDEPTS] of ^department;
+		id          : integer;
+	END;
+
+	state = RECORD
+		count  : integer; 
+		id     : integer; 
+		plants : array [1..MAXPLANTS] of ^plant;
+	END;
+
+	deptp     = ^department;
 	employeep = ^employee;
+	plantp    = ^plant;
+	statep    = ^state;
 
 VAR
 	ch        : char;
 	empl      : employee;
-	stt       : ^state;
 	employees : array [1..MAXLN] of employee;
 	emplcount : integer;
 	i         : integer;
@@ -66,25 +78,30 @@ BEGIN
 	read(empl.count);
 END;
 
-PROCEDURE writeempl;
+PROCEDURE writeempl(e : employeep);
 	PROCEDURE writename;
 	VAR
 		i : integer;
 	BEGIN
 		i := 1;
-		WHILE empl.name[i] <> NULLC DO
+		WHILE e^.name[i] <> NULLC DO
 		BEGIN
-		write(ErrOutput, empl.name[i]);
+			write(ErrOutput, empl.name[i]);
 			i := i + 1;
 		END;
 	END;
 BEGIN
-	WITH empl DO
+	WITH e^ DO
 	BEGIN
-		write(ErrOutput, 'State: ', state, ' Plant: ', plant, ' Dept: ', dept, ' ID: ', id, ' Name: ');
+		write('   ', state, '   ', plant, '   ', dept, '   ', id);
+		IF count > 10 tHEN
+			write('     ')
+		ELSE
+			write('    ');
+		write(count);
+		write(' ');
 		writename;
-		write(ErrOutput, ' Widgets: ', count);
-		writeln(ErrOutput);
+		writeln;
 	END
 END;
 
@@ -100,46 +117,73 @@ BEGIN
 	END;
 END;
 
-PROCEDURE writeemployees;
+PROCEDURE writedept(d : deptp);
+VAR
+	i : integer;
 BEGIN
-	FOR emplcount := 1 TO MAXLN DO
+	FOR i := 1 TO MAXEMPLOYEES DO
 	BEGIN
-		empl := employees[emplcount];
-		writeempl;
+		IF Not(d^.employees[i] = NULLP) THEN
+			writeempl(d^.employees[i]);
 	END;
 END;
 
-PROCEDURE writestate;
+PROCEDURE writeplant(p : plantp);
+VAR
+	i : integer;
 BEGIN
-	IF stt^.count < 10 THEN
+	FOR i := 1 TO MAXDEPTS DO
+	BEGIN
+		IF Not(p^.departments[i] = NULLP) THEN
+			writedept(p^.departments[i]);
+	END;
+	writeln('              ** total for plant ', p^.id);
+END;
+
+PROCEDURE writestate(s : statep);
+VAR
+	i : integer;
+BEGIN
+	FOR i := 1 TO MAXPLANTS DO
+	BEGIN
+		IF Not(s^.plants[i] = NULLP) THEN
+			writeplant(s^.plants[i]);
+	END;
+
+	IF s^.count < 10 THEN
 		write('                           ')
 	ELSE
-		IF stt^.count < 100 THEN
+		IF s^.count < 100 THEN
 			write('                          ')
 		ELSE
 			write('                         ');
-	writeln(stt^.count, ' ***  total for state ', stt^.id)
+	writeln(s^.count, ' ***  total for state ', s^.id)
 END;
 
 PROCEDURE writeworld;
 BEGIN
 	FOR i := 1 TO MAXSTATES DO
 	BEGIN
-		stt := world[i];
-		IF Not(stt = NULLP) THEN
-			writestate;
+		IF Not(world[i] = NULLP) THEN
+			writestate(world[i]);
 	END;
 END;
 
+
 FUNCTION findstate(stateid : integer) : statep;
+	FUNCTION initstate : statep;
+	VAR
+		index : integer;
+	BEGIN
+		initstate := new(statep);
+		initstate^.count := 0;
+		initstate^.id := stateid;
+		FOR index := 1 TO MAXPLANTS DO
+			initstate^.plants[index] := NULLP;
+	END;
 BEGIN
 	IF world[stateid] = NULLP THEN
-	BEGIN
-		world[stateid] := new(statep);
-		world[stateid]^.count := 0;
-		world[stateid]^.id := stateid;
-	END;
-
+		world[stateid] := initstate;
 	findstate := world[stateid];
 END;
 
@@ -149,26 +193,66 @@ BEGIN
 		world[i] := NULLP;
 END;
 
-PROCEDURE appendtostate(stt : statep; empl : employeep);
+PROCEDURE appendtodept(d : deptp; e : employeep);
 BEGIN
+	d^.count := d^.count + e^.count;
+	d^.employees[e^.id] := e;
 END;
 
-PROCEDURE sortworld;
+PROCEDURE appendtoplant(p : plantp; e : employeep);
+	FUNCTION finddept(deptid : integer) : deptp;
+		FUNCTION initdept : deptp;
+		BEGIN
+			initdept := new(deptp);
+			initdept^.count := 0;
+			initdept^.id := deptid;
+		END;
+	BEGIN
+		IF p^.departments[deptid] = NULLP THEN
+			p^.departments[deptid] := initdept;
+		finddept := p^.departments[deptid];
+	END;
+BEGIN
+	p^.count := p^.count + e^.count;
+	appendtodept(finddept(e^.dept), e);
+END;
+
+PROCEDURE appendtostate(s : statep; e : employeep);
+	FUNCTION findplant(plantid : integer) : plantp;
+		FUNCTION initplant : plantp;
+		VAR
+			i : integer;
+		BEGIN
+			initplant := new(plantp);
+			initplant^.count := 0;
+			initplant^.id := plantid;
+			FOR i := 1 TO MAXDEPTS DO
+				initplant^.departments[i] := NULLP;
+		END;
+	BEGIN
+		IF s^.plants[plantid] = NULLP THEN
+			s^.plants[plantid] := initplant;
+		findplant := s^.plants[plantid];
+	END;
+BEGIN
+	s^.count := s^.count + e^.count;
+	appendtoplant(findplant(e^.plant), e);
+END;
+
+PROCEDURE fillworld;
+VAR
+	i : integer;
 BEGIN
 	FOR i := 1 TO emplcount DO
 	BEGIN
 		empl := employees[i];
-		writeempl;
-		stt := findstate(empl.state);
-		stt^.count := stt^.count + empl.count;
-		(* writeln('Adding ', empl.count, ' widgets from ', empl.name, ' to ', stt^.id, ' for a total of ', stt^.count); *)
-		appendtostate(@stt, @empl)
+		appendtostate(findstate(empl.state), @empl)
 	END;
 END;
 
 BEGIN
 	initworld;
 	reademployees;
-	sortworld;
+	fillworld;
 	writeworld;
 END.
