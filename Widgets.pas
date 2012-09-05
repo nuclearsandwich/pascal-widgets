@@ -1,21 +1,22 @@
+(*
+	Copyright 2012 Steven! Ragnarök. All Rights Reserved.
+	Solves Widgets Assignment by Professor Ron Mak as given in ASSIGNMENT.
+*)
 PROGRAM Widgets;
 CONST
-	NULLP         = pointer(0);
-	NULLC         = #0;
-	LF            = #10;
-	MAXLN         = 12;
-	MAXSTATES     = 50;
-	MAXPLANTS     = 50;
-	MAXDEPTS      = 100;
-	MAXEMPLOYEES  = 1000;
-	HEADER1       = 'STATE PLANT DEPT EMPID COUNT NAME';
-	HEADER2       = '----- ----- ---- ----- ----- ----';
-  U10COUNT      = '                            ';
-	U100COUNT     = '                          ';
+	NULLP         = pointer(0); (* NULL Pointer *)
+	NULLC         = #0; (* NULL character *)
+	MAXSTATES     = 50; (* Max number of possible states *)
+	MAXPLANTS     = 50; (* Max number of possible plants *)
+	MAXDEPTS      = 100; (* Max number of possible departments *)
+	MAXEMPLOYEES  = 1000; (* Max number of possible employees *)
+	HEADER1       = 'STATE PLANT DEPT EMPID COUNT NAME'; (* Table header line 1 *)
+	HEADER2       = '----- ----- ---- ----- ----- ----'; (* Table header line 2 *)
+  U10COUNT      = '                            '; (* spacing constant *)
+	U100COUNT     = '                          '; (* Smaller spacing constant *)
 
 TYPE
 	textfield  = packed array [1..64] of char;
-
 	employee = RECORD
 		count       : integer;
 		dept        : integer;
@@ -24,42 +25,34 @@ TYPE
 		plant       : integer;
 		state       : integer;
 	END;
-
 	department = RECORD
 		count     : integer;
 		employees : array [1..MAXEMPLOYEES] of ^employee;
 		id        : integer;
 	END;
-
 	plant = RECORD
 		count       : integer;
 		departments : array [1..MAXDEPTS] of ^department;
 		id          : integer;
 	END;
-
 	state = RECORD
 		count  : integer; 
 		id     : integer; 
 		plants : array [1..MAXPLANTS] of ^plant;
 	END;
-
 	deptp     = ^department;
 	employeep = ^employee;
 	plantp    = ^plant;
 	statep    = ^state;
 
 VAR
-	ch        : char;
-	empl      : employee;
-	employees : array [1..MAXLN] of employee;
-	emplcount : integer;
-	stcount   : integer;
-	plntcount : integer;
-	deptcount : integer;
-	i         : integer;
-	world     : array [1..MAXSTATES] of ^state;
-	total     : integer;
+	ch        : char; (* For reading input by character *)
+	empl      : employee; (* The current employee *)
+	i         : integer; (* a generic counting index *)
+	world     : array [1..MAXSTATES] of ^state; (* All states in the world *)
+	total     : integer; (* Total number of widgets produced *)
 
+(* Read a single employee from stdin *)
 PROCEDURE readempl;
 	PROCEDURE readname;
 	BEGIN
@@ -70,13 +63,12 @@ PROCEDURE readempl;
 		WHILE ch <> ':' DO
 		BEGIN
 			empl.name[i] := ch;
-			i := i + 1;
+			inc(i);
 			read(ch);
 		END;
 		empl.name[i] := NULLC;
 		read(ch);
 	END;
-
 BEGIN
 	read(empl.state);
 	read(empl.plant);
@@ -86,6 +78,7 @@ BEGIN
 	read(empl.count);
 END;
 
+(* Write an employee to stdout *)
 PROCEDURE writeempl(e : employeep);
 	PROCEDURE writename;
 	VAR
@@ -95,7 +88,7 @@ PROCEDURE writeempl(e : employeep);
 		WHILE e^.name[i] <> NULLC DO
 		BEGIN
 			write(e^.name[i]);
-			i := i + 1;
+			inc(i);
 		END;
 	END;
 BEGIN
@@ -112,17 +105,7 @@ BEGIN
 	END
 END;
 
-PROCEDURE reademployees;
-BEGIN
-	WHILE Not(EOF) DO
-	BEGIN
-		inc(emplcount);
-		readempl;
-		employees[emplcount] := empl;
-		read(ch); (* Eat the line feed *)
-	END;
-END;
-
+(* Write a department to stdout *)
 PROCEDURE writedept(d : deptp);
 VAR
 	i : integer;
@@ -141,6 +124,7 @@ BEGIN
 	writeln(d^.count, ' *    total for department ', d^.id);
 END;
 
+(* Write a plant to stdout *)
 PROCEDURE writeplant(p : plantp);
 VAR
 	i : integer;
@@ -157,6 +141,7 @@ BEGIN
 	writeln(p^.count, ' **   total for plant ', p^.id);
 END;
 
+(* Write a state to stdout *)
 PROCEDURE writestate(s : statep);
 VAR
 	i : integer;
@@ -166,7 +151,6 @@ BEGIN
 		IF Not(s^.plants[i] = NULLP) THEN
 			writeplant(s^.plants[i]);
 	END;
-
 	IF s^.count < 10 THEN
 		write(U10COUNT)
 	ELSE
@@ -174,22 +158,29 @@ BEGIN
 	writeln(s^.count, ' ***  total for state ', s^.id)
 END;
 
-PROCEDURE writestates;
+(* Write headers, states, and total to stdout *)
+PROCEDURE writeworld;
 BEGIN
+	writeln(HEADER1);
+	writeln(HEADER2);
 	FOR i := 1 TO MAXSTATES DO
 	BEGIN
 		IF Not(world[i] = NULLP) THEN
 			writestate(world[i]);
 	END;
+	IF total < 10 THEN
+		write(U10COUNT)
+	ELSE
+		write(U100COUNT);
+	writeln(total, ' **** grand total');
 END;
 
-
+(* Find or initialize the desired state *)
 FUNCTION findstate(stateid : integer) : statep;
 	FUNCTION initstate : statep;
 	VAR
 		index : integer;
 	BEGIN
-		inc(stcount);
 		initstate := new(statep);
 		initstate^.count := 0;
 		initstate^.id := stateid;
@@ -202,6 +193,7 @@ BEGIN
 	findstate := world[stateid];
 END;
 
+(* Initialize the world *)
 PROCEDURE initworld;
 BEGIN
 	total := 0;
@@ -209,6 +201,7 @@ BEGIN
 		world[i] := NULLP;
 END;
 
+(* Add an employee to a department *)
 PROCEDURE appendtodept(d : deptp; e : employeep);
 	FUNCTION copyemployee : employeep;
 		FUNCTION copyname : textfield;
@@ -237,11 +230,11 @@ BEGIN
 	d^.employees[e^.id] := copyemployee;
 END;
 
+(* Add an employee to a plant *)
 PROCEDURE appendtoplant(p : plantp; e : employeep);
 	FUNCTION finddept(deptid : integer) : deptp;
 		FUNCTION initdept : deptp;
 		BEGIN
-			inc(deptcount);
 			initdept := new(deptp);
 			initdept^.count := 0;
 			initdept^.id := deptid;
@@ -256,13 +249,13 @@ BEGIN
 	appendtodept(finddept(e^.dept), e);
 END;
 
+(* Add an employee to a state *)
 PROCEDURE appendtostate(s : statep; e : employeep);
 	FUNCTION findplant(plantid : integer) : plantp;
 		FUNCTION initplant : plantp;
 		VAR
 			i : integer;
 		BEGIN
-			inc(plntcount);
 			initplant := new(plantp);
 			initplant^.count := 0;
 			initplant^.id := plantid;
@@ -279,42 +272,21 @@ BEGIN
 	appendtoplant(findplant(e^.plant), e);
 END;
 
+(* Read employees and fill the world with them *)
 PROCEDURE fillworld;
-VAR
-	i : integer;
 BEGIN
-	FOR i := 1 TO emplcount DO
+	WHILE Not(EOF) DO
 	BEGIN
-		empl := employees[i];
+		readempl;
 		total := total + empl.count;
-		appendtostate(findstate(empl.state), @empl)
+		appendtostate(findstate(empl.state), @empl);
+		read(ch); (* Eat the line feed *)
 	END;
 END;
 
-PROCEDURE writeheaders;
+(* Main program *)
 BEGIN
-	writeln(HEADER1);
-	writeln(HEADER2);
-END;
-
-PROCEDURE writetotal;
-BEGIN
-	IF total < 10 THEN
-		write(U10COUNT)
-	ELSE
-		write(U100COUNT);
-	writeln(total, ' **** grand total');
-END;
-
-BEGIN
-	emplcount := 0;
-	stcount   := 0;
-	plntcount := 0;
-	deptcount := 0;
 	initworld;
-	reademployees;
 	fillworld;
-	writeheaders;
-	writestates;
-	writetotal;
+	writeworld;
 END.
