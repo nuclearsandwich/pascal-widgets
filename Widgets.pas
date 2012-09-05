@@ -112,10 +112,8 @@ VAR
 BEGIN
 	writeln;
 	FOR i := 1 TO MAXEMPLOYEES DO
-	BEGIN
-		IF Not(d^.employees[i] = NULLP) THEN
+		IF not(d^.employees[i] = NULLP) THEN
 			writeempl(d^.employees[i]);
-	END;
 	writeln;
 	IF d^.count < 10 THEN
 		write(U10COUNT)
@@ -131,7 +129,7 @@ VAR
 BEGIN
 	FOR i := 1 TO MAXDEPTS DO
 	BEGIN
-		IF Not(p^.departments[i] = NULLP) THEN
+		IF not(p^.departments[i] = NULLP) THEN
 			writedept(p^.departments[i]);
 	END;
 	IF p^.count < 10 THEN
@@ -148,7 +146,7 @@ VAR
 BEGIN
 	FOR i := 1 TO MAXPLANTS DO
 	BEGIN
-		IF Not(s^.plants[i] = NULLP) THEN
+		IF not(s^.plants[i] = NULLP) THEN
 			writeplant(s^.plants[i]);
 	END;
 	IF s^.count < 10 THEN
@@ -165,7 +163,7 @@ BEGIN
 	writeln(HEADER2);
 	FOR i := 1 TO MAXSTATES DO
 	BEGIN
-		IF Not(world[i] = NULLP) THEN
+		IF not(world[i] = NULLP) THEN
 			writestate(world[i]);
 	END;
 	IF total < 10 THEN
@@ -275,7 +273,7 @@ END;
 (* Read employees and fill the world with them *)
 PROCEDURE fillworld;
 BEGIN
-	WHILE Not(EOF) DO
+	WHILE not(EOF) DO
 	BEGIN
 		readempl;
 		total := total + empl.count;
