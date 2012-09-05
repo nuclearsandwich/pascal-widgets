@@ -7,7 +7,11 @@ CONST
 	MAXSTATES     = 50;
 	MAXPLANTS     = 50;
 	MAXDEPTS      = 100;
-	MAXEMPLOYEES  = 100;
+	MAXEMPLOYEES  = 1000;
+	HEADER1       = 'STATE PLANT DEPT EMPID COUNT NAME';
+	HEADER2       = '----- ----- ---- ----- ----- ----';
+  U10COUNT      = '                            ';
+	U100COUNT     = '                          ';
 
 TYPE
 	textfield  = packed array [1..64] of char;
@@ -23,13 +27,13 @@ TYPE
 
 	department = RECORD
 		count     : integer;
-		employees : packed array [1..MAXEMPLOYEES] of ^employee;
+		employees : array [1..MAXEMPLOYEES] of ^employee;
 		id        : integer;
 	END;
 
 	plant = RECORD
 		count       : integer;
-		departments : packed array [1..MAXDEPTS] of ^department;
+		departments : array [1..MAXDEPTS] of ^department;
 		id          : integer;
 	END;
 
@@ -53,7 +57,8 @@ VAR
 	plntcount : integer;
 	deptcount : integer;
 	i         : integer;
-	world     : packed array [1..MAXSTATES] of ^state;
+	world     : array [1..MAXSTATES] of ^state;
+	total     : integer;
 
 PROCEDURE readempl;
 	PROCEDURE readname;
@@ -89,20 +94,19 @@ PROCEDURE writeempl(e : employeep);
 		i := 1;
 		WHILE e^.name[i] <> NULLC DO
 		BEGIN
-			write(ErrOutput, empl.name[i]);
+			write(e^.name[i]);
 			i := i + 1;
 		END;
 	END;
 BEGIN
 	WITH e^ DO
 	BEGIN
-		write('   ', state, '   ', plant, '   ', dept, '   ', id);
-		IF count > 10 tHEN
+		write('   ', state, '    ', plant, '   ', dept, '   ', id);
+		IF count < 10 tHEN
 			write('     ')
 		ELSE
 			write('    ');
-		write(count);
-		write(' ');
+		write(count, ' ');
 		writename;
 		writeln;
 	END
@@ -123,11 +127,18 @@ PROCEDURE writedept(d : deptp);
 VAR
 	i : integer;
 BEGIN
+	writeln;
 	FOR i := 1 TO MAXEMPLOYEES DO
 	BEGIN
 		IF Not(d^.employees[i] = NULLP) THEN
 			writeempl(d^.employees[i]);
 	END;
+	writeln;
+	IF d^.count < 10 THEN
+		write(U10COUNT)
+	ELSE
+		write(U100COUNT);
+	writeln(d^.count, ' *    total for department ', d^.id);
 END;
 
 PROCEDURE writeplant(p : plantp);
@@ -139,7 +150,11 @@ BEGIN
 		IF Not(p^.departments[i] = NULLP) THEN
 			writedept(p^.departments[i]);
 	END;
-	writeln('              ** total for plant ', p^.id);
+	IF p^.count < 10 THEN
+		write(U10COUNT)
+	ELSE
+		write(U100COUNT);
+	writeln(p^.count, ' **   total for plant ', p^.id);
 END;
 
 PROCEDURE writestate(s : statep);
@@ -153,16 +168,13 @@ BEGIN
 	END;
 
 	IF s^.count < 10 THEN
-		write('                           ')
+		write(U10COUNT)
 	ELSE
-		IF s^.count < 100 THEN
-			write('                          ')
-		ELSE
-			write('                         ');
+		write(U100COUNT);
 	writeln(s^.count, ' ***  total for state ', s^.id)
 END;
 
-PROCEDURE writeworld;
+PROCEDURE writestates;
 BEGIN
 	FOR i := 1 TO MAXSTATES DO
 	BEGIN
@@ -192,14 +204,37 @@ END;
 
 PROCEDURE initworld;
 BEGIN
+	total := 0;
 	FOR i := 1 TO MAXSTATES DO
 		world[i] := NULLP;
 END;
 
 PROCEDURE appendtodept(d : deptp; e : employeep);
+	FUNCTION copyemployee : employeep;
+		FUNCTION copyname : textfield;
+		VAR
+			i : integer;
+		BEGIN
+			i := 1;
+			WHILE e^.name[i] <> NULLC DO
+			BEGIN
+				copyname[i] := e^.name[i];
+				inc(i);
+			END;
+			copyname[i] := NULLC;
+		END;
+	BEGIN
+		copyemployee := new(employeep);
+		copyemployee^.id := e^.id;
+		copyemployee^.state := e^.state;
+		copyemployee^.plant := e^.plant;
+		copyemployee^.dept := e^.dept;
+		copyemployee^.count := e^.count;
+		copyemployee^.name := copyname;
+	END;
 BEGIN
 	d^.count := d^.count + e^.count;
-	d^.employees[e^.id] := e;
+	d^.employees[e^.id] := copyemployee;
 END;
 
 PROCEDURE appendtoplant(p : plantp; e : employeep);
@@ -251,8 +286,24 @@ BEGIN
 	FOR i := 1 TO emplcount DO
 	BEGIN
 		empl := employees[i];
+		total := total + empl.count;
 		appendtostate(findstate(empl.state), @empl)
 	END;
+END;
+
+PROCEDURE writeheaders;
+BEGIN
+	writeln(HEADER1);
+	writeln(HEADER2);
+END;
+
+PROCEDURE writetotal;
+BEGIN
+	IF total < 10 THEN
+		write(U10COUNT)
+	ELSE
+		write(U100COUNT);
+	writeln(total, ' **** grand total');
 END;
 
 BEGIN
@@ -263,9 +314,7 @@ BEGIN
 	initworld;
 	reademployees;
 	fillworld;
-
-	writeln('Employees: ', emplcount);
-	writeln('States: ', stcount);
-	writeln('Plants ', plntcount);
-	writeln('Depts ', deptcount);
+	writeheaders;
+	writestates;
+	writetotal;
 END.
